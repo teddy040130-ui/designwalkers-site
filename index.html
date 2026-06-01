@@ -907,14 +907,14 @@
             </div>
             <nav>
                 <ul id="nav-links">
-                    <li><a href="#none" data-target="main-hero" class="active">Main</a></li>
-                    <li><a href="#none" data-target="stories">Stories</a></li>
-                    <li><a href="#none" data-target="capabilities">WHAT WE MAKE</a></li>
-                    <li><a href="#none" data-target="archive">Archive</a></li>
-                    <li><a href="#none" data-target="process">Process</a></li>
-                    <li><a href="#none" data-target="faq">FAQ</a></li>
-                    <li><a href="#none" data-target="journal">Journal</a></li>
-                    <li><a href="#none" data-target="contact">Contact</a></li>
+                    <li><a href="#main" data-target="main-hero" class="active">Main</a></li>
+                    <li><a href="#stories" data-target="stories">Stories</a></li>
+                    <li><a href="#what-we-make" data-target="capabilities">WHAT WE MAKE</a></li>
+                    <li><a href="#archive" data-target="archive">Archive</a></li>
+                    <li><a href="#process" data-target="process">Process</a></li>
+                    <li><a href="#faq" data-target="faq">FAQ</a></li>
+                    <li><a href="#journal" data-target="journal">Journal</a></li>
+                    <li><a href="#contact" data-target="contact">Contact</a></li>
                 </ul>
             </nav>
             <div class="sidebar-footer">
@@ -1136,7 +1136,7 @@
                         <span class="detail-sub" id="detail-sub"></span>
                         <hr class="detail-divider">
                         <p class="detail-desc" id="detail-desc"></p>
-                        <a class="detail-cta" data-target="contact" href="#none">파트너십 문의하기</a>
+                        <a class="detail-cta" data-target="contact" href="#contact">파트너십 문의하기</a>
                     </div>
                 </div>
                 <p class="detail-shots-title">Model Shots</p>
@@ -1263,17 +1263,108 @@
     }
 
     /* ============================================================
-       NAVIGATION — goTo는 전역 함수로 먼저 선언
+       NAVIGATION — 해시 기반 화면 이동 + 브라우저 뒤로가기 지원
     ============================================================ */
-    function goTo(targetId) {
+    const ROUTE_BY_SECTION = {
+        'main-hero':    'main',
+        'stories':      'stories',
+        'capabilities': 'what-we-make',
+        'archive':      'archive',
+        'process':      'process',
+        'faq':          'faq',
+        'journal':      'journal',
+        'contact':      'contact'
+    };
+    const SECTION_BY_ROUTE = {
+        'main':         'main-hero',
+        'stories':      'stories',
+        'what-we-make': 'capabilities',
+        'archive':      'archive',
+        'process':      'process',
+        'faq':          'faq',
+        'journal':      'journal',
+        'contact':      'contact'
+    };
+    let galleryAllItems = [];
+
+    function renderSection(targetId, activeNavTarget = targetId) {
         document.querySelectorAll('main section').forEach(s => s.classList.remove('is-active'));
         document.querySelectorAll('#nav-links a').forEach(l => l.classList.remove('active'));
         const target = document.getElementById(targetId);
         if (target) target.classList.add('is-active');
-        const activeLink = document.querySelector(`#nav-links a[data-target="${targetId}"]`);
+        const activeLink = document.querySelector(`#nav-links a[data-target="${activeNavTarget}"]`);
         if (activeLink) activeLink.classList.add('active');
         closeSidebar();
         window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+
+    function getCurrentRoute() {
+        try {
+            return decodeURIComponent(window.location.hash.replace(/^#/, '')) || 'main';
+        } catch (e) {
+            return 'main';
+        }
+    }
+
+    function setRoute(route, options = {}) {
+        const nextHash = `#${route}`;
+        if (window.location.hash === nextHash) {
+            renderCurrentRoute();
+            return;
+        }
+        if (options.replace) {
+            window.history.replaceState(null, '', nextHash);
+        } else {
+            window.history.pushState(null, '', nextHash);
+        }
+        renderCurrentRoute();
+    }
+
+    function goTo(targetId, options = {}) {
+        setRoute(ROUTE_BY_SECTION[targetId] || 'main', options);
+    }
+
+    function renderCurrentRoute() {
+        const route = getCurrentRoute();
+        const parts = route.split('/');
+        const sectionRoute = parts[0];
+        const detailKey = parts[1];
+
+        if (sectionRoute === 'what-we-make') {
+            if (detailKey && CAP_DATA[detailKey]) {
+                showCapDetail(detailKey);
+            } else {
+                renderSection('capabilities');
+            }
+            return;
+        }
+
+        if (sectionRoute === 'archive') {
+            if (detailKey !== undefined && galleryAllItems.length) {
+                const itemIndex = Number(detailKey);
+                const item = Number.isInteger(itemIndex) ? galleryAllItems[itemIndex] : null;
+                if (item) {
+                    showDetail(item);
+                    return;
+                }
+            }
+            renderSection('archive');
+            return;
+        }
+
+        if (sectionRoute === 'journal') {
+            if (detailKey && journalAllPosts.length) {
+                const post = journalAllPosts.find(row => String(row.id) === detailKey);
+                if (post) {
+                    showJournalDetail(post);
+                    return;
+                }
+            }
+            renderSection('journal');
+            return;
+        }
+
+        renderSection(SECTION_BY_ROUTE[sectionRoute] || 'main-hero');
     }
 
     /* ============================================================
@@ -1353,9 +1444,9 @@
     };
 
     /* ============================================================
-       CAPABILITIES 상세 열기
+       WHAT WE MAKE 상세 열기
     ============================================================ */
-    function openCapDetail(key) {
+    function showCapDetail(key) {
         const d = CAP_DATA[key];
         if (!d) return;
         document.getElementById('cap-detail-title').innerText = d.title;
@@ -1365,13 +1456,18 @@
         ).join('');
         document.getElementById('cap-detail-works').innerHTML =
             '<p style="color:var(--muted);font-size:13px;grid-column:1/-1;">관련 작업물이 곧 업로드됩니다.</p>';
-        goTo('cap-detail');
+        renderSection('cap-detail', 'capabilities');
+    }
+
+    function openCapDetail(key) {
+        if (!CAP_DATA[key]) return;
+        setRoute(`what-we-make/${encodeURIComponent(key)}`);
     }
 
     /* ============================================================
        GALLERY 상세 열기
     ============================================================ */
-    function openDetail(item) {
+    function showDetail(item) {
         document.getElementById('detail-main-img').src       = item.image_url;
         document.getElementById('detail-main-img').alt       = item.name || '';
         document.getElementById('detail-name').innerText     = item.name || '—';
@@ -1382,7 +1478,12 @@
         shotsEl.innerHTML = shots.length
             ? shots.map(url => `<div class="shot-item"><img src="${url}" loading="lazy" onload="this.classList.add('loaded')" onerror="this.style.display='none'"></div>`).join('')
             : '<p class="detail-no-shots">착용샷이 아직 등록되지 않았습니다.</p>';
-        goTo('gallery-detail');
+        renderSection('gallery-detail', 'archive');
+    }
+
+    function openDetail(item, itemIndex) {
+        if (!item || !Number.isInteger(itemIndex)) return;
+        setRoute(`archive/${itemIndex}`);
     }
 
     /* ============================================================
@@ -1437,6 +1538,7 @@
             if (error) throw error;
             journalAllPosts = data || [];
             renderJournal();
+            renderCurrentRoute();
         } catch(e) {
             console.warn('journal load failed:', e);
             document.getElementById('journal-list').innerHTML =
@@ -1495,7 +1597,7 @@
         });
     }
 
-    function openJournalDetail(post) {
+    function showJournalDetail(post) {
         const date = new Date(post.created_at).toLocaleDateString('ko-KR', { year:'numeric', month:'long', day:'numeric' });
         const img  = document.getElementById('jd-cover-img');
         img.src = post.cover_url || '';
@@ -1506,7 +1608,12 @@
         document.getElementById('jd-body').innerText  = post.content || '';
         // 커버 없으면 커버 영역 숨기기
         document.querySelector('.jd-cover').style.display = post.cover_url ? 'block' : 'none';
-        goTo('journal-detail');
+        renderSection('journal-detail', 'journal');
+    }
+
+    function openJournalDetail(post) {
+        if (!post || post.id === undefined || post.id === null) return;
+        setRoute(`journal/${encodeURIComponent(String(post.id))}`);
     }
 
     function showMsg(text, type) {
@@ -1566,18 +1673,21 @@
         try {
             const { data, error } = await sb.from('gallery').select('image_url,name,sub,sort_order,description,detail_images').eq('is_active', true).order('sort_order', { ascending: true });
             if (error) throw error;
-            if (!data || !data.length) { container.innerHTML = '<p class="gallery-empty">갤러리 이미지가 없습니다.</p>'; return; }
-            container.innerHTML = data.map(item => {
-                const safe = JSON.stringify(item).replace(/"/g, '&quot;');
-                return `<div class="gallery-item" style="cursor:pointer;" onclick="openDetail(JSON.parse(this.dataset.item.replace(/&quot;/g,'\"')))}" data-item="${safe}">
+            galleryAllItems = data || [];
+            if (!galleryAllItems.length) {
+                container.innerHTML = '<p class="gallery-empty">갤러리 이미지가 없습니다.</p>';
+                renderCurrentRoute();
+                return;
+            }
+            container.innerHTML = galleryAllItems.map(item => `
+                <div class="gallery-item" style="cursor:pointer;">
                     <div class="gallery-img-wrap"><img src="${item.image_url}" alt="${item.name||''}" loading="lazy" onload="this.classList.add('loaded');this.closest('.gallery-item').classList.add('img-loaded')" onerror="this.parentElement.innerHTML='<div style=\'display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:11px;\'>로드 실패</div>'"></div>
                     <div class="gallery-caption"><span class="prod-name">${item.name||'—'}</span>${item.sub?`<span class="prod-sub">${item.sub}</span>`:''}</div>
-                </div>`;
-            }).join('');
-            // 클릭 이벤트 직접 등록 (onclick 대신 안전하게)
+                </div>`).join('');
             container.querySelectorAll('.gallery-item').forEach((el, i) => {
-                el.addEventListener('click', () => openDetail(data[i]));
+                el.addEventListener('click', () => openDetail(galleryAllItems[i], i));
             });
+            renderCurrentRoute();
         } catch(e) {
             console.warn('갤러리 로드 실패:', e);
             container.innerHTML = '<p class="gallery-empty" style="color:#e74c3c;">갤러리를 불러올 수 없습니다.</p>';
@@ -1698,16 +1808,14 @@
             if (!isOpen) item.classList.add('open');
         });
 
-        // Capabilities 상세 뒤로가기 + 문의 버튼
-        document.getElementById('cap-detail-back').addEventListener('click', () => goTo('capabilities'));
+        // 상세 화면의 자체 뒤로가기 버튼: 상세 기록을 부모 화면으로 교체해 중복 이력을 만들지 않음
+        document.getElementById('cap-detail-back').addEventListener('click', () => setRoute('what-we-make', { replace: true }));
         document.getElementById('cap-detail-cta').addEventListener('click',  () => goTo('contact'));
 
-        // Gallery 상세 뒤로가기 + 문의 버튼
-        document.getElementById('detail-back-btn').addEventListener('click', () => goTo('archive'));
+        document.getElementById('detail-back-btn').addEventListener('click', () => setRoute('archive', { replace: true }));
         document.querySelector('#gallery-detail .detail-cta').addEventListener('click', (e) => { e.preventDefault(); goTo('contact'); });
 
-        // Journal 상세 뒤로가기
-        document.getElementById('jd-back-btn').addEventListener('click', () => goTo('journal'));
+        document.getElementById('jd-back-btn').addEventListener('click', () => setRoute('journal', { replace: true }));
 
         // Journal 페이지네이션
         document.getElementById('jp-prev').addEventListener('click', () => {
@@ -1716,6 +1824,11 @@
         document.getElementById('jp-next').addEventListener('click', () => {
             journalPage++; renderJournal(); window.scrollTo(0, 0);
         });
+
+        // 브라우저 뒤로가기/앞으로가기 및 직접 해시 접속 처리
+        window.addEventListener('popstate', renderCurrentRoute);
+        window.addEventListener('hashchange', renderCurrentRoute);
+        renderCurrentRoute();
 
         // 데이터 로드
         loadSiteData();   // hero + story 이미지 포함
