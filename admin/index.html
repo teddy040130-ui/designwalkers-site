@@ -20,7 +20,12 @@
         .login-box { background: var(--white); border: 1px solid var(--faint); padding: 40px; width: 320px; }
         .login-box input { width: 100%; padding: 12px 0; border: none; border-bottom: 1px solid var(--ink); background: transparent; font-size: 15px; outline: none; margin-bottom: 24px; font-family: inherit; }
         .login-box button { width: 100%; background: var(--ink); color: var(--white); border: none; padding: 14px; font-weight: 700; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; font-family: inherit; }
-        .login-error { color: var(--red); font-size: 12px; margin-top: 12px; display: none; }
+        .login-error { color: var(--red); font-size: 12px; margin-top: 12px; display: none; line-height: 1.6; }
+        .login-success { color: var(--green); font-size: 12px; margin-top: 12px; display: none; line-height: 1.6; }
+        .login-help { font-size: 11px; color: var(--muted); line-height: 1.65; margin-top: 16px; }
+        .login-link-btn { width: 100%; border: none; background: none; color: var(--mid); padding: 16px 0 0; font-size: 12px; text-decoration: underline; cursor: pointer; font-family: inherit; }
+        .login-sub-title { font-size: 13px; font-weight: 700; margin-bottom: 18px; }
+        .login-secondary-btn { width: 100%; background: transparent !important; color: var(--mid) !important; border: 1px solid var(--faint) !important; margin-top: 10px; }
 
         /* ── 레이아웃 ── */
         #admin-screen { display: none; }
@@ -113,18 +118,43 @@
 </head>
 <body>
 
-<!-- 로그인 -->
+<!-- 로그인 / 비밀번호 재설정 -->
 <div id="login-screen">
     <div style="text-align:center;">
         <h1>Design Walkers</h1>
         <p style="font-size:11px; color:var(--muted); margin-top:4px; letter-spacing:0.1em; text-transform:uppercase;">Admin Panel</p>
     </div>
     <div class="login-box">
-        <input type="email" id="email-input" placeholder="관리자 이메일" autocomplete="username">
-        <input type="password" id="pw-input" placeholder="비밀번호" autocomplete="current-password" onkeydown="if(event.key==='Enter') tryLogin()">
-        <button id="login-btn" onclick="tryLogin()">LOGIN</button>
-        <p class="login-error" id="login-error"></p>
-        <p style="font-size:11px;color:var(--muted);line-height:1.6;margin-top:16px;">허가된 관리자 계정만 접속할 수 있습니다.</p>
+
+        <div id="login-form">
+            <input type="email" id="email-input" placeholder="관리자 이메일" autocomplete="username">
+            <input type="password" id="pw-input" placeholder="비밀번호" autocomplete="current-password" onkeydown="if(event.key==='Enter') tryLogin()">
+            <button id="login-btn" onclick="tryLogin()">LOGIN</button>
+            <button class="login-link-btn" type="button" onclick="showResetRequestForm()">비밀번호를 잊으셨나요?</button>
+            <p class="login-error" id="login-error"></p>
+            <p class="login-success" id="login-success"></p>
+            <p class="login-help">허가된 관리자 계정만 접속할 수 있습니다.</p>
+        </div>
+
+        <div id="reset-request-form" style="display:none;">
+            <p class="login-sub-title">비밀번호 재설정</p>
+            <p class="login-help" style="margin:0 0 18px;">관리자 이메일을 입력하면 새 비밀번호 설정 링크를 보내드립니다.</p>
+            <input type="email" id="reset-email-input" placeholder="관리자 이메일" autocomplete="username" onkeydown="if(event.key==='Enter') sendPasswordResetEmail()">
+            <button id="reset-request-btn" onclick="sendPasswordResetEmail()">RESET PASSWORD</button>
+            <button class="login-secondary-btn" type="button" onclick="showLoginForm()">로그인으로 돌아가기</button>
+            <p class="login-error" id="reset-error"></p>
+            <p class="login-success" id="reset-success"></p>
+        </div>
+
+        <div id="password-update-form" style="display:none;">
+            <p class="login-sub-title">새 비밀번호 설정</p>
+            <p class="login-help" style="margin:0 0 18px;">새로 사용할 비밀번호를 입력해 주세요.</p>
+            <input type="password" id="new-password-input" placeholder="새 비밀번호 (8자 이상)" autocomplete="new-password">
+            <input type="password" id="new-password-confirm-input" placeholder="새 비밀번호 확인" autocomplete="new-password" onkeydown="if(event.key==='Enter') updateRecoveredPassword()">
+            <button id="password-update-btn" onclick="updateRecoveredPassword()">SAVE NEW PASSWORD</button>
+            <p class="login-error" id="password-update-error"></p>
+        </div>
+
     </div>
 </div>
 
@@ -370,31 +400,66 @@ const sb = window.supabase.createClient(
 );
 
 /* ── 인증 / 관리자 권한 ──
-   중요: 로그인 보안은 HTML 안의 비밀번호가 아니라 Supabase Auth + RLS 정책으로 처리합니다.
+   로그인 보안은 Supabase Auth + RLS 정책으로 처리합니다.
    site_admin_users 테이블에 등록된 Auth 사용자만 관리자 데이터를 수정할 수 있습니다.
+   비밀번호 재설정은 이메일 링크를 통해 새 비밀번호를 설정하는 방식입니다.
 */
 let currentAdminUser = null;
+let passwordRecoveryMode = false;
+const PASSWORD_RESET_REDIRECT_URL = `${window.location.origin}/admin/?mode=reset`;
 
-function showLoginError(message) {
-    const el = document.getElementById('login-error');
+function setMessage(id, message, type = 'error') {
+    const el = document.getElementById(id);
+    if (!el) return;
     el.innerText = message || '';
     el.style.display = message ? 'block' : 'none';
+    el.className = type === 'success' ? 'login-success' : 'login-error';
 }
 
-function setLoginLoading(isLoading) {
-    const btn = document.getElementById('login-btn');
+function clearAuthMessages() {
+    ['login-error', 'login-success', 'reset-error', 'reset-success', 'password-update-error']
+        .forEach(id => setMessage(id, ''));
+}
+
+function setButtonLoading(id, isLoading, defaultText, loadingText) {
+    const btn = document.getElementById(id);
+    if (!btn) return;
     btn.disabled = isLoading;
-    btn.innerText = isLoading ? 'CHECKING...' : 'LOGIN';
+    btn.innerText = isLoading ? loadingText : defaultText;
+}
+
+function showAuthPanel(panelId) {
+    ['login-form', 'reset-request-form', 'password-update-form'].forEach(id => {
+        document.getElementById(id).style.display = id === panelId ? 'block' : 'none';
+    });
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('admin-screen').style.display = 'none';
+    clearAuthMessages();
+}
+
+function showLoginForm(message = '', type = 'error') {
+    passwordRecoveryMode = false;
+    showAuthPanel('login-form');
+    document.getElementById('pw-input').value = '';
+    if (message) setMessage(type === 'success' ? 'login-success' : 'login-error', message, type);
+}
+
+function showResetRequestForm() {
+    const currentEmail = document.getElementById('email-input').value.trim();
+    showAuthPanel('reset-request-form');
+    if (currentEmail) document.getElementById('reset-email-input').value = currentEmail;
+}
+
+function showPasswordUpdateForm() {
+    passwordRecoveryMode = true;
+    showAuthPanel('password-update-form');
 }
 
 function showLoginScreen(message = '') {
     currentAdminUser = null;
-    document.getElementById('login-screen').style.display = 'flex';
-    document.getElementById('admin-screen').style.display = 'none';
     document.getElementById('admin-email').innerText = '';
-    document.getElementById('pw-input').value = '';
-    showLoginError(message);
-    setLoginLoading(false);
+    showLoginForm(message);
+    setButtonLoading('login-btn', false, 'LOGIN', 'CHECKING...');
 }
 
 async function isRegisteredAdmin(userId) {
@@ -422,10 +487,11 @@ async function enterAdmin(session) {
         return;
     }
     currentAdminUser = session.user;
+    passwordRecoveryMode = false;
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('admin-screen').style.display = 'block';
     document.getElementById('admin-email').innerText = session.user.email || '';
-    showLoginError('');
+    clearAuthMessages();
     await loadAll();
 }
 
@@ -433,22 +499,82 @@ async function tryLogin() {
     const email = document.getElementById('email-input').value.trim();
     const password = document.getElementById('pw-input').value;
     if (!email || !password) {
-        showLoginError('이메일과 비밀번호를 입력해주세요.');
+        setMessage('login-error', '이메일과 비밀번호를 입력해주세요.');
         return;
     }
 
-    setLoginLoading(true);
-    showLoginError('');
+    setButtonLoading('login-btn', true, 'LOGIN', 'CHECKING...');
+    clearAuthMessages();
 
     const { data, error } = await sb.auth.signInWithPassword({ email, password });
     if (error || !data.session) {
-        showLoginError('로그인 정보가 올바르지 않습니다.');
-        setLoginLoading(false);
+        setMessage('login-error', '로그인 정보가 올바르지 않습니다.');
+        setButtonLoading('login-btn', false, 'LOGIN', 'CHECKING...');
         return;
     }
 
     await enterAdmin(data.session);
-    setLoginLoading(false);
+    setButtonLoading('login-btn', false, 'LOGIN', 'CHECKING...');
+}
+
+async function sendPasswordResetEmail() {
+    const email = document.getElementById('reset-email-input').value.trim();
+    if (!email) {
+        setMessage('reset-error', '관리자 이메일을 입력해주세요.');
+        return;
+    }
+
+    setButtonLoading('reset-request-btn', true, 'RESET PASSWORD', 'SENDING...');
+    clearAuthMessages();
+
+    const { error } = await sb.auth.resetPasswordForEmail(email, {
+        redirectTo: PASSWORD_RESET_REDIRECT_URL
+    });
+
+    setButtonLoading('reset-request-btn', false, 'RESET PASSWORD', 'SENDING...');
+
+    if (error) {
+        setMessage('reset-error', '재설정 메일 발송에 실패했습니다. 잠시 후 다시 시도해주세요.');
+        return;
+    }
+
+    setMessage(
+        'reset-success',
+        '등록된 관리자 이메일이라면 비밀번호 재설정 메일이 발송되었습니다. 메일의 링크를 눌러 새 비밀번호를 설정해주세요.',
+        'success'
+    );
+}
+
+async function updateRecoveredPassword() {
+    const password = document.getElementById('new-password-input').value;
+    const confirmPassword = document.getElementById('new-password-confirm-input').value;
+
+    if (password.length < 8) {
+        setMessage('password-update-error', '비밀번호는 8자 이상으로 입력해주세요.');
+        return;
+    }
+    if (password !== confirmPassword) {
+        setMessage('password-update-error', '새 비밀번호가 일치하지 않습니다.');
+        return;
+    }
+
+    setButtonLoading('password-update-btn', true, 'SAVE NEW PASSWORD', 'SAVING...');
+    setMessage('password-update-error', '');
+
+    const { error } = await sb.auth.updateUser({ password });
+
+    if (error) {
+        setMessage('password-update-error', '비밀번호 변경 링크가 만료되었거나 변경에 실패했습니다. 재설정 메일을 다시 요청해주세요.');
+        setButtonLoading('password-update-btn', false, 'SAVE NEW PASSWORD', 'SAVING...');
+        return;
+    }
+
+    await sb.auth.signOut();
+    window.history.replaceState({}, document.title, '/admin/');
+    document.getElementById('new-password-input').value = '';
+    document.getElementById('new-password-confirm-input').value = '';
+    showLoginForm('비밀번호가 변경되었습니다. 새 비밀번호로 로그인해주세요.', 'success');
+    setButtonLoading('password-update-btn', false, 'SAVE NEW PASSWORD', 'SAVING...');
 }
 
 async function logout() {
@@ -456,12 +582,33 @@ async function logout() {
     showLoginScreen();
 }
 
+sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'PASSWORD_RECOVERY') {
+        showPasswordUpdateForm();
+        return;
+    }
+    if (event === 'SIGNED_OUT' && !passwordRecoveryMode) {
+        showLoginScreen();
+    }
+});
+
 document.addEventListener('DOMContentLoaded', async () => {
+    const resetRequested = new URLSearchParams(window.location.search).get('mode') === 'reset'
+        || window.location.hash.includes('type=recovery');
+
+    if (resetRequested) {
+        showPasswordUpdateForm();
+        return;
+    }
+
     const { data } = await sb.auth.getSession();
     if (data && data.session) {
         await enterAdmin(data.session);
+    } else {
+        showLoginForm();
     }
 });
+
 
 /* ── 탭 ── */
 document.querySelectorAll('.tab-btn').forEach(btn => {
