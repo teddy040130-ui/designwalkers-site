@@ -216,13 +216,13 @@
                     <div class="field">
                         <label>첨부파일 업로드</label>
                         <div style="border:1px solid var(--faint);background:var(--bg);padding:20px;text-align:center;">
-                            <input type="file" id="jf-file-input" multiple accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.zip,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+                            <input type="file" id="jf-file-input" multiple accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.zip,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.hwp,.txt,.csv,.mp4,.mov"
                                 style="display:none;" onchange="handleFileSelect(event)">
                             <button type="button" class="btn btn-ghost" onclick="document.getElementById('jf-file-input').click()"
                                 style="margin-bottom:12px;">
                                 📎 파일 선택
                             </button>
-                            <p style="font-size:11px;color:var(--muted);">PDF, 이미지, Office 파일 등 최대 50MB</p>
+                            <p style="font-size:11px;color:var(--muted);">PDF · 이미지 · Word · Excel · PPT · HWP · ZIP · 동영상 등 최대 50MB</p>
                         </div>
                         <!-- 업로드 진행 상태 -->
                         <div id="jf-upload-progress" style="margin-top:8px;display:none;">
@@ -1301,8 +1301,8 @@ function getFileIcon(name) {
     const ext = name.split('.').pop().toLowerCase();
     if (['pdf'].includes(ext)) return '📄';
     if (['jpg','jpeg','png','gif','webp','avif'].includes(ext)) return '🖼';
-    if (['doc','docx'].includes(ext)) return '📝';
-    if (['xls','xlsx'].includes(ext)) return '📊';
+    if (['doc','docx','hwp'].includes(ext)) return '📝';
+    if (['xls','xlsx','csv'].includes(ext)) return '📊';
     if (['ppt','pptx'].includes(ext)) return '📋';
     if (['zip','rar'].includes(ext)) return '🗜';
     return '📎';
