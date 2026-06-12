@@ -206,6 +206,35 @@
                     <div class="field"><label>제목 *</label><input id="jf-title" placeholder="제목"></div>
                     <div class="field"><label>부제목</label><input id="jf-subtitle" placeholder="한 줄 요약"></div>
                     <div class="field"><label>커버 이미지 URL</label><input id="jf-cover" placeholder="https://..."></div>
+                    <div class="field">
+                        <label>첨부 이미지 URL (줄바꿈으로 구분, 순서대로 표시)</label>
+                        <textarea id="jf-images" rows="5" placeholder="https://...이미지1.jpg&#10;https://...이미지2.jpg&#10;https://...이미지3.jpg"></textarea>
+                        <p style="font-size:11px;color:var(--muted);margin-top:6px;">Supabase Storage에 업로드 후 Public URL을 한 줄에 하나씩 입력하세요.</p>
+                    </div>
+
+                    <!-- 첨부파일 업로드 -->
+                    <div class="field">
+                        <label>첨부파일 업로드</label>
+                        <div style="border:1px solid var(--faint);background:var(--bg);padding:20px;text-align:center;">
+                            <input type="file" id="jf-file-input" multiple accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.zip,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+                                style="display:none;" onchange="handleFileSelect(event)">
+                            <button type="button" class="btn btn-ghost" onclick="document.getElementById('jf-file-input').click()"
+                                style="margin-bottom:12px;">
+                                📎 파일 선택
+                            </button>
+                            <p style="font-size:11px;color:var(--muted);">PDF, 이미지, Office 파일 등 최대 50MB</p>
+                        </div>
+                        <!-- 업로드 진행 상태 -->
+                        <div id="jf-upload-progress" style="margin-top:8px;display:none;">
+                            <div style="background:var(--faint);height:4px;border-radius:2px;overflow:hidden;">
+                                <div id="jf-progress-bar" style="background:var(--ink);height:100%;width:0;transition:width 0.3s;"></div>
+                            </div>
+                            <p id="jf-progress-text" style="font-size:11px;color:var(--muted);margin-top:6px;"></p>
+                        </div>
+                        <!-- 첨부파일 목록 -->
+                        <div id="jf-attachments-list" style="margin-top:12px;"></div>
+                    </div>
+
                     <div class="field"><label>본문</label><textarea id="jf-content" rows="8" placeholder="본문 내용"></textarea></div>
                     <div class="field-row">
                         <div class="field"><label>순서</label><input id="jf-order" type="number" value="0"></div>
@@ -827,7 +856,9 @@ function resetForm(type) {
         document.getElementById('pf-order').value    = (processSteps.length + 1);
         document.getElementById('process-form-label').innerText = '새 단계';
     } else if (type === 'journal') {
-        ['jf-id','jf-title','jf-subtitle','jf-cover','jf-content'].forEach(id => document.getElementById(id).value = '');
+        ['jf-id','jf-title','jf-subtitle','jf-cover','jf-content','jf-images'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+        jfAttachments = [];
+        renderAttachmentsList();
         document.getElementById('jf-order').value = 0;
         document.getElementById('jf-active').className = 'toggle on';
         document.getElementById('journal-form-label').innerText = '새 게시물';
@@ -849,7 +880,11 @@ function editJournal(id) {
     document.getElementById('jf-subtitle').value= p.subtitle||'';
     document.getElementById('jf-cover').value   = p.cover_url||'';
     document.getElementById('jf-content').value = p.content||'';
+    document.getElementById('jf-images').value  = (p.images||[]).join('\n');
     document.getElementById('jf-order').value   = p.sort_order||0;
+    // 첨부파일 불러오기
+    jfAttachments = Array.isArray(p.attachments) ? [...p.attachments] : [];
+    renderAttachmentsList();
     document.getElementById('jf-active').className = 'toggle'+(p.is_active?' on':'');
     document.getElementById('journal-form-label').innerText = '게시물 수정';
     document.getElementById('journal-form').style.display = 'block';
@@ -861,8 +896,10 @@ async function saveJournal() {
     const payload = {
         title:      document.getElementById('jf-title').value.trim(),
         subtitle:   document.getElementById('jf-subtitle').value.trim(),
-        cover_url:  document.getElementById('jf-cover').value.trim(),
-        content:    document.getElementById('jf-content').value.trim(),
+        cover_url:   document.getElementById('jf-cover').value.trim(),
+        content:     document.getElementById('jf-content').value.trim(),
+        images:      (document.getElementById('jf-images').value.trim().split('\n').map(s=>s.trim()).filter(Boolean)),
+        attachments: jfAttachments,
         sort_order: +document.getElementById('jf-order').value||0,
         is_active:  document.getElementById('jf-active').classList.contains('on'),
     };
@@ -1253,6 +1290,93 @@ async function saveContactBasic() {
         ['contact_tel',   'ct-tel'],
     ];
     await saveTexts(pairs, 'ct-basic-msg');
+}
+
+/* ═══════════════════════════════
+   저널 첨부파일 업로드
+═══════════════════════════════ */
+let jfAttachments = []; // 현재 편집 중인 첨부파일 목록
+
+function getFileIcon(name) {
+    const ext = name.split('.').pop().toLowerCase();
+    if (['pdf'].includes(ext)) return '📄';
+    if (['jpg','jpeg','png','gif','webp','avif'].includes(ext)) return '🖼';
+    if (['doc','docx'].includes(ext)) return '📝';
+    if (['xls','xlsx'].includes(ext)) return '📊';
+    if (['ppt','pptx'].includes(ext)) return '📋';
+    if (['zip','rar'].includes(ext)) return '🗜';
+    return '📎';
+}
+
+function formatBytes(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function renderAttachmentsList() {
+    const el = document.getElementById('jf-attachments-list');
+    if (!jfAttachments.length) { el.innerHTML = ''; return; }
+    el.innerHTML = jfAttachments.map((att, i) => `
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--white);border:1px solid var(--faint);margin-bottom:6px;">
+            <span style="font-size:18px;flex-shrink:0;">${getFileIcon(att.name)}</span>
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${att.name}</div>
+                <div style="font-size:10px;color:var(--muted);">${att.size || ''}</div>
+            </div>
+            <a href="${att.url}" target="_blank" class="btn btn-ghost btn-sm" style="flex-shrink:0;">보기</a>
+            <button class="btn btn-danger btn-sm" onclick="removeAttachment(${i})" style="flex-shrink:0;">삭제</button>
+        </div>`).join('');
+}
+
+function removeAttachment(i) {
+    jfAttachments.splice(i, 1);
+    renderAttachmentsList();
+}
+
+async function handleFileSelect(event) {
+    const files = Array.from(event.target.files);
+    if (!files.length) return;
+
+    const progress    = document.getElementById('jf-upload-progress');
+    const progressBar = document.getElementById('jf-progress-bar');
+    const progressTxt = document.getElementById('jf-progress-text');
+    progress.style.display = 'block';
+
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        progressTxt.innerText = `업로드 중 ${i+1}/${files.length}: ${file.name}`;
+        progressBar.style.width = `${Math.round((i / files.length) * 100)}%`;
+
+        // 파일명 충돌 방지: 타임스탬프 prefix
+        const safeName  = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._\-가-힣]/g, '_')}`;
+        const filePath  = `${safeName}`;
+
+        const { data, error } = await sb.storage
+            .from('journal-files')
+            .upload(filePath, file, { upsert: false });
+
+        if (error) {
+            progressTxt.innerText = `❌ 실패: ${file.name} — ${error.message}`;
+            continue;
+        }
+
+        // Public URL 생성
+        const { data: urlData } = sb.storage.from('journal-files').getPublicUrl(filePath);
+        jfAttachments.push({
+            name: file.name,
+            url:  urlData.publicUrl,
+            size: formatBytes(file.size),
+            type: file.type,
+        });
+    }
+
+    progressBar.style.width = '100%';
+    progressTxt.innerText   = `✓ ${files.length}개 업로드 완료`;
+    setTimeout(() => { progress.style.display = 'none'; }, 2000);
+
+    renderAttachmentsList();
+    event.target.value = ''; // input 초기화
 }
 
 /* ═══════════════════════════════
