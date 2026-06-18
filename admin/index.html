@@ -175,6 +175,9 @@
 
         <!-- 탭 네비 -->
         <nav class="admin-tabs">
+            <div class="tab-group-label">분석</div>
+            <button class="tab-btn" data-tab="insights">인사이트</button>
+
             <div class="tab-group-label">콘텐츠</div>
             <button class="tab-btn active" data-tab="journal">Journal</button>
             <button class="tab-btn" data-tab="gallery">Gallery</button>
@@ -193,6 +196,81 @@
         </nav>
 
         <div class="admin-content">
+
+            <!-- ══════════ 인사이트 ══════════ -->
+            <div class="panel" id="tab-insights">
+                <div class="panel-header">
+                    <h2>인사이트</h2>
+                    <a href="https://analytics.google.com" target="_blank" class="btn btn-ghost">
+                        GA 대시보드 열기 ↗
+                    </a>
+                </div>
+
+                <!-- 안내 카드 -->
+                <div class="form-card" style="margin-bottom:16px;">
+                    <p class="form-card-title">Google Analytics 연결됨</p>
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+                        <div style="width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;"></div>
+                        <span style="font-size:13px;font-weight:700;">G-MN6T102G91</span>
+                        <span style="font-size:12px;color:var(--muted);">designwalkers.co.kr</span>
+                    </div>
+                    <p style="font-size:13px;color:var(--mid);line-height:1.7;margin-bottom:20px;">
+                        방문자 데이터는 Google Analytics에서 수집되고 있습니다.<br>
+                        상세 분석(유입경로, 기기, 국가, 전환율 등)은 GA 대시보드에서 확인하세요.
+                    </p>
+                    <a href="https://analytics.google.com" target="_blank"
+                        style="display:inline-flex;align-items:center;gap:8px;background:var(--ink);color:#fff;padding:12px 24px;font-size:11px;font-weight:700;text-decoration:none;letter-spacing:0.1em;text-transform:uppercase;transition:background 0.2s;"
+                        onmouseover="this.style.background='#333'" onmouseout="this.style.background='var(--ink)'">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 20V10M12 20V4M6 20v-6"/>
+                        </svg>
+                        Google Analytics 열기
+                    </a>
+                </div>
+
+                <!-- 빠른 링크 -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+                    <a href="https://analytics.google.com/analytics/web/#/p${GA_PROPERTY}/reports/intelligenthome" target="_blank"
+                        style="display:block;background:var(--white);border:1px solid var(--faint);padding:20px;text-decoration:none;transition:border-color 0.2s;"
+                        onmouseover="this.style.borderColor='var(--ink)'" onmouseout="this.style.borderColor='var(--faint)'">
+                        <p style="font-size:20px;margin-bottom:8px;">👥</p>
+                        <p style="font-size:13px;font-weight:700;color:var(--ink);margin-bottom:4px;">실시간 방문자</p>
+                        <p style="font-size:11px;color:var(--muted);">지금 사이트에 있는 방문자</p>
+                    </a>
+                    <a href="https://analytics.google.com/analytics/web/#/p${GA_PROPERTY}/reports/explorer?params=_u..pageSize%3D25&r=all-pages-and-screens" target="_blank"
+                        style="display:block;background:var(--white);border:1px solid var(--faint);padding:20px;text-decoration:none;transition:border-color 0.2s;"
+                        onmouseover="this.style.borderColor='var(--ink)'" onmouseout="this.style.borderColor='var(--faint)'">
+                        <p style="font-size:20px;margin-bottom:8px;">📄</p>
+                        <p style="font-size:13px;font-weight:700;color:var(--ink);margin-bottom:4px;">페이지별 조회수</p>
+                        <p style="font-size:11px;color:var(--muted);">어떤 페이지를 많이 보는지</p>
+                    </a>
+                    <a href="https://analytics.google.com/analytics/web/#/p${GA_PROPERTY}/reports/acquisition-overview" target="_blank"
+                        style="display:block;background:var(--white);border:1px solid var(--faint);padding:20px;text-decoration:none;transition:border-color 0.2s;"
+                        onmouseover="this.style.borderColor='var(--ink)'" onmouseout="this.style.borderColor='var(--faint)'">
+                        <p style="font-size:20px;margin-bottom:8px;">🔍</p>
+                        <p style="font-size:13px;font-weight:700;color:var(--ink);margin-bottom:4px;">유입 경로</p>
+                        <p style="font-size:11px;color:var(--muted);">검색/직접/소셜/추천</p>
+                    </a>
+                    <a href="https://analytics.google.com/analytics/web/#/p${GA_PROPERTY}/reports/lifecycle-audience-overview" target="_blank"
+                        style="display:block;background:var(--white);border:1px solid var(--faint);padding:20px;text-decoration:none;transition:border-color 0.2s;"
+                        onmouseover="this.style.borderColor='var(--ink)'" onmouseout="this.style.borderColor='var(--faint)'">
+                        <p style="font-size:20px;margin-bottom:8px;">🌍</p>
+                        <p style="font-size:13px;font-weight:700;color:var(--ink);margin-bottom:4px;">방문자 국가·기기</p>
+                        <p style="font-size:11px;color:var(--muted);">어디서, 어떤 기기로 접속하는지</p>
+                    </a>
+                </div>
+
+                <!-- Supabase 자체 방문 카운터 -->
+                <div class="form-card">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                        <p class="form-card-title" style="margin-bottom:0;">방문자 카운터 (최근 30일)</p>
+                        <button class="btn btn-ghost btn-sm" onclick="loadVisitorStats()">↻ 새로고침</button>
+                    </div>
+                    <div id="visitor-stats">
+                        <p style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">로딩 중...</p>
+                    </div>
+                </div>
+            </div>
 
             <!-- ══════════ JOURNAL ══════════ -->
             <div class="panel active" id="tab-journal">
@@ -794,6 +872,8 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
         this.classList.add('active');
         document.getElementById('tab-' + this.dataset.tab).classList.add('active');
+        // 인사이트 탭 클릭 시 자동 로드
+        if (this.dataset.tab === 'insights') loadVisitorStats();
     });
 });
 
@@ -1200,6 +1280,97 @@ async function saveProcessStep() {
 }
 
 /* ═══════════════════════════════
+   인사이트 — 방문자 통계
+═══════════════════════════════ */
+async function loadVisitorStats() {
+    const el = document.getElementById('visitor-stats');
+    if (!el) return;
+    el.innerHTML = '<p style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">로딩 중...</p>';
+    try {
+        const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+        const { data, error } = await sb
+            .from('page_views')
+            .select('created_at, referrer')
+            .gte('created_at', since)
+            .order('created_at', { ascending: true });
+
+        if (error) throw error;
+        if (!data || !data.length) {
+            el.innerHTML = '<p style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">아직 방문 데이터가 없습니다.<br>사이트 배포 후 방문자가 생기면 표시됩니다.</p>';
+            return;
+        }
+
+        const daily = {}, refMap = {};
+        data.forEach(row => {
+            const day = row.created_at.slice(0, 10);
+            daily[day] = (daily[day] || 0) + 1;
+            const ref = row.referrer
+                ? (row.referrer.includes('google') ? '구글 검색'
+                 : row.referrer.includes('instagram') ? '인스타그램'
+                 : row.referrer.includes('naver') ? '네이버'
+                 : row.referrer.includes('kakao') ? '카카오'
+                 : '기타 링크')
+                : '직접 방문';
+            refMap[ref] = (refMap[ref] || 0) + 1;
+        });
+
+        const days = [];
+        for (let i = 29; i >= 0; i--) {
+            const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+            days.push(d.toISOString().slice(0, 10));
+        }
+        const counts = days.map(d => daily[d] || 0);
+        const maxCount = Math.max(...counts, 1);
+        const total = data.length;
+        const todayCount = daily[new Date().toISOString().slice(0,10)] || 0;
+
+        const refHtml = Object.entries(refMap).sort((a,b)=>b[1]-a[1]).map(([k,v]) => `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--faint);">
+                <span style="font-size:13px;color:var(--mid);">${k}</span>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="width:80px;height:4px;background:var(--faint);border-radius:2px;overflow:hidden;">
+                        <div style="width:${Math.round(v/total*100)}%;height:100%;background:var(--ink);"></div>
+                    </div>
+                    <span style="font-size:12px;font-weight:700;color:var(--ink);min-width:28px;text-align:right;">${v}</span>
+                </div>
+            </div>`).join('');
+
+        const barHtml = days.map((d, i) => {
+            const h = Math.round(counts[i] / maxCount * 80);
+            const label = i % 5 === 0 ? d.slice(5) : '';
+            return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;">
+                <div style="height:80px;display:flex;align-items:flex-end;width:100%;">
+                    <div style="width:100%;height:${Math.max(h,1)}px;background:${counts[i]>0?'var(--ink)':'var(--faint)'};border-radius:1px 1px 0 0;" title="${d}: ${counts[i]}명"></div>
+                </div>
+                <span style="font-size:9px;color:var(--muted);">${label}</span>
+            </div>`;
+        }).join('');
+
+        el.innerHTML = `
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:24px;">
+                <div style="background:var(--bg);padding:16px;text-align:center;">
+                    <p style="font-size:28px;font-weight:800;color:var(--ink);letter-spacing:-0.02em;">${total.toLocaleString()}</p>
+                    <p style="font-size:11px;color:var(--muted);margin-top:4px;">30일 총 방문</p>
+                </div>
+                <div style="background:var(--bg);padding:16px;text-align:center;">
+                    <p style="font-size:28px;font-weight:800;color:var(--ink);letter-spacing:-0.02em;">${todayCount.toLocaleString()}</p>
+                    <p style="font-size:11px;color:var(--muted);margin-top:4px;">오늘 방문</p>
+                </div>
+                <div style="background:var(--bg);padding:16px;text-align:center;">
+                    <p style="font-size:28px;font-weight:800;color:var(--ink);letter-spacing:-0.02em;">${Math.round(total/30)}</p>
+                    <p style="font-size:11px;color:var(--muted);margin-top:4px;">일평균 방문</p>
+                </div>
+            </div>
+            <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:12px;">일별 방문자 (최근 30일)</p>
+            <div style="display:flex;gap:2px;align-items:flex-end;margin-bottom:24px;">${barHtml}</div>
+            <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:4px;">유입 경로</p>
+            ${refHtml}`;
+    } catch(e) {
+        el.innerHTML = `<p style="color:var(--red);font-size:13px;padding:20px;">오류: ${e.message}</p>`;
+    }
+}
+
+/* ═══════════════════════════════
    CONTACT 폼 편집
 ═══════════════════════════════ */
 let contactOptions = { category: [], volume: [] };
@@ -1398,7 +1569,7 @@ async function handleFileSelect(event) {
    이미지 URL 관리
 ═══════════════════════════════ */
 const IMAGE_KEYS = [
-    { key:'img_hero',        label:'Hero 배경 이미지', hasPosition: true },
+    { key:'img_hero',        label:'Hero 배경 이미지', hasPosition: true, hasMobile: true },
     { key:'hero_image_url',  label:'Hero 배경 이미지 (alias)', hasPosition: false, hidden: true },
     { key:'img_story',       label:'Stories 사진',     hasPosition: false },
 ];
@@ -1421,31 +1592,62 @@ function loadImages() {
                             style="width:100%;padding:8px 10px;border:1px solid var(--faint);background:var(--bg);font-size:12px;font-family:inherit;outline:none;">
                     </div>
                     ${img.hasPosition ? `
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                        <div class="field">
-                            <label>높이 (vh)</label>
-                            <select id="${img.key}_height" style="width:100%;padding:8px 10px;border:1px solid var(--faint);background:var(--bg);font-size:12px;font-family:inherit;outline:none;">
-                                <option value="50vh" ${siteTexts[img.key+'_height']==='50vh'?'selected':''}>50vh — 낮게</option>
-                                <option value="60vh" ${siteTexts[img.key+'_height']==='60vh'?'selected':''}>60vh</option>
-                                <option value="70vh" ${(!siteTexts[img.key+'_height']||siteTexts[img.key+'_height']==='70vh')?'selected':''}>70vh — 기본</option>
-                                <option value="80vh" ${siteTexts[img.key+'_height']==='80vh'?'selected':''}>80vh</option>
-                                <option value="90vh" ${siteTexts[img.key+'_height']==='90vh'?'selected':''}>90vh — 크게</option>
-                                <option value="100vh" ${siteTexts[img.key+'_height']==='100vh'?'selected':''}>100vh — 전체</option>
-                            </select>
+                    <div style="margin-bottom:10px;">
+                        <p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:8px;">🖥 데스크탑</p>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                            <div class="field">
+                                <label>높이 (vh)</label>
+                                <select id="${img.key}_height" style="width:100%;padding:8px 10px;border:1px solid var(--faint);background:var(--bg);font-size:12px;font-family:inherit;outline:none;">
+                                    <option value="50vh" ${siteTexts[img.key+'_height']==='50vh'?'selected':''}>50vh — 낮게</option>
+                                    <option value="60vh" ${siteTexts[img.key+'_height']==='60vh'?'selected':''}>60vh</option>
+                                    <option value="70vh" ${(!siteTexts[img.key+'_height']||siteTexts[img.key+'_height']==='70vh')?'selected':''}>70vh — 기본</option>
+                                    <option value="80vh" ${siteTexts[img.key+'_height']==='80vh'?'selected':''}>80vh</option>
+                                    <option value="90vh" ${siteTexts[img.key+'_height']==='90vh'?'selected':''}>90vh — 크게</option>
+                                    <option value="100vh" ${siteTexts[img.key+'_height']==='100vh'?'selected':''}>100vh — 전체</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label>구도 (세로 기준)</label>
+                                <select id="${img.key}_pos" style="width:100%;padding:8px 10px;border:1px solid var(--faint);background:var(--bg);font-size:12px;font-family:inherit;outline:none;">
+                                    <option value="top"    ${siteTexts[img.key+'_pos']==='top'?'selected':''}>상단 기준 (얼굴·상체)</option>
+                                    <option value="center" ${(!siteTexts[img.key+'_pos']||siteTexts[img.key+'_pos']==='center')?'selected':''}>중앙 기준 — 기본</option>
+                                    <option value="bottom" ${siteTexts[img.key+'_pos']==='bottom'?'selected':''}>하단 기준 (하체·발)</option>
+                                    <option value="20% center" ${siteTexts[img.key+'_pos']==='20% center'?'selected':''}>약간 위</option>
+                                    <option value="30% center" ${siteTexts[img.key+'_pos']==='30% center'?'selected':''}>위에서 30%</option>
+                                    <option value="40% center" ${siteTexts[img.key+'_pos']==='40% center'?'selected':''}>위에서 40%</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="field">
-                            <label>구도 (세로 기준)</label>
-                            <select id="${img.key}_pos" style="width:100%;padding:8px 10px;border:1px solid var(--faint);background:var(--bg);font-size:12px;font-family:inherit;outline:none;">
-                                <option value="top"    ${siteTexts[img.key+'_pos']==='top'?'selected':''}>상단 기준 (얼굴·상체)</option>
-                                <option value="center" ${(!siteTexts[img.key+'_pos']||siteTexts[img.key+'_pos']==='center')?'selected':''}>중앙 기준 — 기본</option>
-                                <option value="bottom" ${siteTexts[img.key+'_pos']==='bottom'?'selected':''}>하단 기준 (하체·발)</option>
-                                <option value="20% center" ${siteTexts[img.key+'_pos']==='20% center'?'selected':''}>약간 위</option>
-                                <option value="30% center" ${siteTexts[img.key+'_pos']==='30% center'?'selected':''}>위에서 30%</option>
-                                <option value="40% center" ${siteTexts[img.key+'_pos']==='40% center'?'selected':''}>위에서 40%</option>
-                            </select>
+                    </div>` : ''}
+                    ${img.hasMobile ? `
+                    <div style="margin-top:4px;">
+                        <p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:8px;">📱 모바일</p>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                            <div class="field">
+                                <label>높이 (vh)</label>
+                                <select id="${img.key}_height_mobile" style="width:100%;padding:8px 10px;border:1px solid var(--faint);background:var(--bg);font-size:12px;font-family:inherit;outline:none;">
+                                    <option value="35vh" ${siteTexts[img.key+'_height_mobile']==='35vh'?'selected':''}>35vh — 작게</option>
+                                    <option value="40vh" ${siteTexts[img.key+'_height_mobile']==='40vh'?'selected':''}>40vh</option>
+                                    <option value="45vh" ${siteTexts[img.key+'_height_mobile']==='45vh'?'selected':''}>45vh</option>
+                                    <option value="52vh" ${(!siteTexts[img.key+'_height_mobile']||siteTexts[img.key+'_height_mobile']==='52vh')?'selected':''}>52vh — 기본</option>
+                                    <option value="60vh" ${siteTexts[img.key+'_height_mobile']==='60vh'?'selected':''}>60vh</option>
+                                    <option value="70vh" ${siteTexts[img.key+'_height_mobile']==='70vh'?'selected':''}>70vh</option>
+                                    <option value="80vh" ${siteTexts[img.key+'_height_mobile']==='80vh'?'selected':''}>80vh — 크게</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label>구도 (세로 기준)</label>
+                                <select id="${img.key}_pos_mobile" style="width:100%;padding:8px 10px;border:1px solid var(--faint);background:var(--bg);font-size:12px;font-family:inherit;outline:none;">
+                                    <option value="top"    ${siteTexts[img.key+'_pos_mobile']==='top'?'selected':''}>상단 기준 (얼굴·상체)</option>
+                                    <option value="center" ${(!siteTexts[img.key+'_pos_mobile']||siteTexts[img.key+'_pos_mobile']==='center')?'selected':''}>중앙 기준 — 기본</option>
+                                    <option value="bottom" ${siteTexts[img.key+'_pos_mobile']==='bottom'?'selected':''}>하단 기준 (하체·발)</option>
+                                    <option value="20% center" ${siteTexts[img.key+'_pos_mobile']==='20% center'?'selected':''}>약간 위</option>
+                                    <option value="30% center" ${siteTexts[img.key+'_pos_mobile']==='30% center'?'selected':''}>위에서 30%</option>
+                                    <option value="40% center" ${siteTexts[img.key+'_pos_mobile']==='40% center'?'selected':''}>위에서 40%</option>
+                                </select>
+                            </div>
                         </div>
-                    </div>
-                    ` : ''}
+                    </div>` : ''}
                 </div>
             </div>
         </div>`).join('');
@@ -1464,6 +1666,10 @@ async function saveImages() {
         if (img.hasPosition) {
             pairs.push([img.key+'_height', img.key+'_height']);
             pairs.push([img.key+'_pos',    img.key+'_pos']);
+        }
+        if (img.hasMobile) {
+            pairs.push([img.key+'_height_mobile', img.key+'_height_mobile']);
+            pairs.push([img.key+'_pos_mobile',    img.key+'_pos_mobile']);
         }
     });
     // img_hero 변경 시 hero_image_url도 동기화
